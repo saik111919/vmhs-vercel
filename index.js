@@ -1,11 +1,11 @@
-var express = require('express');
-const path = require('path');
-const cors = require('cors');
-const router = require('./Routes/routes');
-const { wss } = require('./Routes/WebSocket/WebSocket');
+var express = require("express");
+const path = require("path");
+const cors = require("cors");
+const router = require("./Routes/routes");
+const { wss } = require("./Routes/WebSocket/WebSocket");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const { getClientAndCollection } = require('./Routes/DataBase/MangoDB');
+const { getClientAndCollection } = require("./Routes/DataBase/MangoDB");
 dotenv.config();
 const app = express();
 
@@ -35,7 +35,13 @@ process.on("SIGINT", () => {
 });
 
 // Middleware
-app.use("/", express.static(path.join(__dirname, "public")));
+// app.use("/", express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
+
+// Handles any requests that don't match the ones above
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
@@ -47,18 +53,15 @@ const server = app.listen(PORT, () => {
 });
 
 // Upgrade HTTP server to handle WebSocket requests
-server.on('upgrade', function upgrade(request, socket, head) {
+server.on("upgrade", function upgrade(request, socket, head) {
   const pathname = request.url;
 
-  if (pathname === '/api/callsocket') {
+  if (pathname === "/api/callsocket") {
     wss.handleUpgrade(request, socket, head, function done(ws) {
-      wss.emit('connection', ws, request);
+      wss.emit("connection", ws, request);
     });
   } else {
     // Handle regular HTTP requests here if needed
     socket.destroy();
   }
 });
-
-
-
